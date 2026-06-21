@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>GlassDL — Premium Downloader</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        :root {
+            --bg-primary: #080C14;
+            --glass-bg: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.10);
+            --glass-border-light: rgba(255, 255, 255, 0.20);
+            --glass-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+            --text-primary: #F0F2F8;
+            --text-secondary: rgba(255, 255, 255, 0.60);
+            --text-tertiary: rgba(255, 255, 255, 0.30);
+            --accent-cyan: #22D3EE;
+            --accent-purple: #7C5CFF;
+            --accent-pink: #FF6B9D;
+            --radius-glass: 28px;
+            --radius-sm: 16px;
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+        html, body {
+            height: 100%;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(140px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            top: -20%;
+            right: -15%;
+            background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+            animation: floatOrb 20s ease-in-out infinite alternate;
+        }
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            bottom: -20%;
+            left: -15%;
+            background: radial-gradient(circle, rgba(124, 92, 255, 0.20), transparent 70%);
+            animation: floatOrb 24s ease-in-out infinite alternate-reverse;
+        }
+        .orb-3 {
+            width: 400px;
+            height: 400px;
+            top: 40%;
+            left: 20%;
+            background: radial-gradient(circle, rgba(255, 107, 157, 0.12), transparent 70%);
+            animation: floatOrb 28s ease-in-out infinite alternate;
+            opacity: 0.5;
+        }
+        @keyframes floatOrb {
+            0% { transform: translate(0,0) scale(1); }
+            100% { transform: translate(40px, -50px) scale(1.15); }
+        }
+        #app {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            max-width: 440px;
+            margin: 0 auto;
+            padding: 20px 20px 12px 20px;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0 16px 0;
+            flex-shrink: 0;
+        }
+        .logo {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 26px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 4px 12px rgba(34,211,238,0.3));
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .header-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .header-btn:active { transform: scale(0.88); background: rgba(255,255,255,0.08); }
+        .header-btn .badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-pink);
+            border-radius: 50%;
+            font-size: 9px;
+            font-weight: 700;
+            color: #080C14;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--bg-primary);
+        }
+        .main-glass {
+            flex: 1;
+            border-radius: var(--radius-glass);
+            background: var(--glass-bg);
+            backdrop-filter: blur(48px) saturate(1.4);
+            -webkit-backdrop-filter: blur(48px) saturate(1.4);
+            border: 1px solid var(--glass-border-light);
+            box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.06);
+            padding: 24px 22px 22px 22px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .main-glass::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 30%, transparent 70%, rgba(255,255,255,0.04) 100%);
+            pointer-events: none;
+            transform: rotate(25deg);
+            z-index: 0;
+        }
+        .search-section {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 16px;
+        }
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 4px 4px 16px;
+            border-radius: 60px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+        }
+        .search-bar:focus-within {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 4px rgba(34,211,238,0.10), inset 0 0 0 1px var(--accent-cyan);
+        }
+        .search-bar .icon { color: var(--text-tertiary); font-size: 18px; flex-shrink: 0; }
+        .search-bar input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: var(--font-body);
+            padding: 12px 0;
+            min-width: 0;
+        }
+        .search-bar input::placeholder { color: var(--text-tertiary); font-weight: 400; }
+        .search-bar .paste-btn {
+            padding: 8px 18px;
+            border-radius: 40px;
+            border: none;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: #080C14;
+            font-weight: 700;
+            font-size: 13px;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+            letter-spacing: 0.02em;
+        }
+        .search-bar .paste-btn:active { transform: scale(0.94); opacity: 0.8; }
+        .video-preview {
+            position: relative;
+            z-index: 1;
+            border-radius: 18px;
+            overflow: hidden;
+            aspect-ratio: 16 / 9;
+            background: linear-gradient(135deg, rgba(34,211,238,0.08), rgba(124,92,255,0.08));
+            border: 1px solid var(--glass-border);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: var(--text-tertiary);
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.5);
+        }
+        .video-preview .play-icon { opacity: 0.5; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.6)); }
+        .video-preview .thumb-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .video-info { z-index: 1; margin-bottom: 12px; }
+        .video-info .title {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 18px;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .video-info .source { font-size: 13px; color: var(--text-secondary); font-weight: 400; }
+        .download-bar {
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: auto;
+            padding-top: 4px;
+        }
+        .download-bar .quality-badge {
+            padding: 10px 18px;
+            border-radius: 40px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--glass-border);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-display);
+        }
+        .download-bar .quality-badge:active { background: rgba(255,255,255,0.08); transform: scale(0.95); }
+        .download-bar .dl-btn {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 40px;
+            border: none;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: #080C14;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 17px;
+            letter-spacing: -0.01em;
+            cursor: pointer;
+            box-shadow: 0 8px 32px -8px rgba(34,211,238,0.30);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .download-bar .dl-btn:active { transform: scale(0.95); box-shadow: 0 4px 16px -4px rgba(34,211,238,0.15); }
+        .progress-wrap {
+            display: none;
+            align-items: center;
+            gap: 16px;
+            padding: 6px 0;
+            z-index: 1;
+        }
+        .progress-wrap.active { display: flex; }
+        .progress-wrap svg {
+            width: 52px;
+            height: 52px;
+            transform: rotate(-90deg);
+            flex-shrink: 0;
+        }
+        .progress-wrap .bg-ring { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 5; }
+        .progress-wrap .fg-ring {
+            fill: none;
+            stroke: url(#ringGrad);
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 138;
+            stroke-dashoffset: 138;
+            transition: stroke-dashoffset 0.25s ease;
+        }
+        .progress-wrap .info { flex: 1; }
+        .progress-wrap .info .pct { font-family: var(--font-display); font-weight: 700; font-size: 20px; line-height: 1.2; }
+        .progress-wrap .info .speed { font-size: 13px; color: var(--text-secondary); }
+        .bottom-tabs {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 10px 0 4px 0;
+            flex-shrink: 0;
+            margin-top: 10px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(32px) saturate(1.2);
+            -webkit-backdrop-filter: blur(32px) saturate(1.2);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-glass);
+            box-shadow: var(--glass-shadow);
+        }
+        .tab-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 8px 0;
+            background: transparent;
+            border: none;
+            color: var(--text-tertiary);
+            font-size: 10px;
+            font-weight: 500;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 12px;
+            letter-spacing: 0.02em;
+        }
+        .tab-btn .tab-icon { font-size: 22px; transition: 0.2s; }
+        .tab-btn.active { color: var(--text-primary); }
+        .tab-btn.active .tab-icon { color: var(--accent-cyan); filter: drop-shadow(0 0 12px rgba(34,211,238,0.3)); }
+        .tab-btn:active { transform: scale(0.92); }
+        .page { display: none; animation: fadeUp 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeUp { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            transition: 0.2s;
+        }
+        .history-item:active { transform: scale(0.98); background: rgba(255,255,255,0.05); }
+        .history-item .h-icon { font-size: 20px; width: 32px; text-align: center; }
+        .history-item .h-info { flex:1; min-width:0; }
+        .history-item .h-info .h-title { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-item .h-info .h-meta { font-size: 12px; color: var(--text-tertiary); }
+        .history-item .h-size { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+        .settings-group { margin-bottom: 18px; }
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .settings-item:last-child { border-bottom: none; }
+        .settings-item .left { display: flex; align-items: center; gap: 12px; }
+        .settings-item .left .s-icon { font-size: 18px; width: 28px; text-align: center; color: var(--text-secondary); }
+        .settings-item .left .s-label { font-size: 14px; font-weight: 500; }
+        .settings-item .right .toggle {
+            width: 44px;
+            height: 24px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            position: relative;
+            transition: 0.3s ease;
+        }
+        .settings-item .right .toggle.active {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border-color: transparent;
+        }
+        .settings-item .right .toggle .knob {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .settings-item .right .toggle.active .knob { left: 23px; }
+        .sheet-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .sheet-overlay.open { opacity: 1; pointer-events: all; }
+        .quality-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 101;
+            background: rgba(10, 14, 26, 0.94);
+            backdrop-filter: blur(56px) saturate(1.4);
+            -webkit-backdrop-filter: blur(56px) saturate(1.4);
+            border-top: 1px solid var(--glass-border-light);
+            border-radius: 40px 40px 0 0;
+            padding: 24px 24px 32px 24px;
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 -40px 80px -20px rgba(0,0,0,0.8);
+        }
+        .quality-sheet.open { transform: translateY(0); }
+        .sheet-handle {
+            width: 44px;
+            height: 4px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.12);
+            margin: 0 auto 20px auto;
+        }
+        .sheet-title {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 22px;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+        .quality-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .quality-item {
+            padding: 14px 6px;
+            border-radius: var(--radius-sm);
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            cursor: pointer;
+            transition: 0.25s ease;
+        }
+        .quality-item:active { transform: scale(0.94); }
+        .quality-item.active {
+            border-color: var(--accent-cyan);
+            background: rgba(34,211,238,0.08);
+            box-shadow: 0 0 30px -10px rgba(34,211,238,0.15);
+        }
+        .quality-item .res { font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+        .quality-item .size { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+        .quality-item .check { display: none; font-size: 14px; color: var(--accent-cyan); margin-top: 4px; }
+        .quality-item.active .check { display: block; }
+        .sheet-dl-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 40px;
+            border: none;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: #080C14;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s ease;
+            box-shadow: 0 8px 32px -8px rgba(34,211,238,0.25);
+        }
+        .sheet-dl-btn:active { transform: scale(0.96); }
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            padding: 14px 28px;
+            border-radius: 60px;
+            background: rgba(12,16,26,0.94);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border-light);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+            white-space: nowrap;
+            box-shadow: var(--glass-shadow);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .quality-sheet::-webkit-scrollbar { width: 3px; }
+        .quality-sheet::-webkit-scrollbar-track { background: transparent; }
+        .quality-sheet::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 10px; }
+        @media (max-width: 460px) {
+            .main-glass { padding: 18px 16px 16px 16px; }
+            .search-bar input { font-size: 14px; }
+        }
+        /* Loading spinner inside quality item */
+        .quality-item.loading { opacity: 0.5; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="toast" id="toast">✨ Ready</div>
+    <div class="sheet-overlay" id="sheetOverlay"></div>
+    <div class="quality-sheet" id="qualitySheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">Select Quality</div>
+        <div class="quality-grid" id="qualityGrid"></div>
+        <button class="sheet-dl-btn" id="sheetDlBtn">⬇ Download</button>
+    </div>
+    <div id="app">
+        <div class="header">
+            <span class="logo">GlassDL</span>
+            <div class="header-actions">
+                <button class="header-btn" id="settingsBtn">⚙</button>
+                <button class="header-btn" id="notifBtn" style="position:relative;">🔔<span class="badge">3</span></button>
+            </div>
+        </div>
+        <div class="main-glass" id="mainGlass">
+            <div class="search-section">
+                <div class="search-bar">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Paste video link…" />
+                    <button class="paste-btn" id="pasteBtn">Paste</button>
+                </div>
+            </div>
+            <div class="video-preview" id="videoPreview">
+                <span class="play-icon">▶</span>
+                <div class="thumb-overlay"></div>
+            </div>
+            <div class="video-info">
+                <div class="title" id="videoTitle">Paste a link to start</div>
+                <div class="source" id="videoSource">Supports YouTube, Instagram, TikTok, and more</div>
+            </div>
+            <div class="download-bar" id="downloadBar">
+                <div class="quality-badge" id="qualityBadge">1080p</div>
+                <button class="dl-btn" id="mainDlBtn">⬇ Download</button>
+            </div>
+            <div class="progress-wrap" id="progressWrap">
+                <svg viewBox="0 0 56 56">
+                    <defs><linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#22D3EE"/><stop offset="100%" stop-color="#7C5CFF"/></linearGradient></defs>
+                    <circle class="bg-ring" cx="28" cy="28" r="22" />
+                    <circle class="fg-ring" id="progressRing" cx="28" cy="28" r="22" />
+                </svg>
+                <div class="info">
+                    <div class="pct" id="progressPct">0%</div>
+                    <div class="speed" id="progressSpeed">0 MB/s</div>
+                </div>
+            </div>
+        </div>
+        <div class="bottom-tabs">
+            <button class="tab-btn active" data-tab="pageHome"><span class="tab-icon">⊞</span> Home</button>
+            <button class="tab-btn" data-tab="pageHistory"><span class="tab-icon">≡</span> History</button>
+            <button class="tab-btn" data-tab="pageSettings"><span class="tab-icon">⚙</span> Settings</button>
+        </div>
+    </div>
+    <div style="display:none;">
+        <div id="pageHome" class="page active"></div>
+        <div id="pageHistory" class="page">
+            <div class="history-list" id="historyList"></div>
+        </div>
+        <div id="pageSettings" class="page">
+            <div class="settings-group">
+                <div class="settings-item"><div class="left"><span class="s-icon">🌙</span><span class="s-label">Dark Mode</span></div><div class="right"><div class="toggle active" id="darkToggle"><div class="knob"></div></div></div></div>
+                <div class="settings-item"><div class="left"><span class="s-icon">📶</span><span class="s-label">Parallel Downloads</span></div><div class="right"><div class="toggle active" id="parallelToggle"><div class="knob"></div></div></div></div>
+                <div class="settings-item"><div class="left"><span class="s-icon">🔔</span><span class="s-label">Notifications</span></div><div class="right"><div class="toggle active" id="notifToggle"><div class="knob"></div></div></div></div>
+                <div class="settings-item"><div class="left"><span class="s-icon">🧹</span><span class="s-label">Auto-clean Cache</span></div><div class="right"><div class="toggle" id="cacheToggle"><div class="knob"></div></div></div></div>
+                <div class="settings-item"><div class="left"><span class="s-icon">📁</span><span class="s-label">Download Location</span></div><div class="right" style="color:var(--text-tertiary);font-size:13px;">Internal</div></div>
+            </div>
+            <div style="text-align:center;color:var(--text-tertiary);font-size:12px;margin-top:20px;">Version 2.4.1 · Premium</div>
+        </div>
+    </div>
+
+    <script>
+        // ─── CONFIG ─────────────────────────────────────────────
+        // Set your backend URL here (or use the public demo)
+        const BACKEND_URL = 'https://glassdl.onrender.com'; // ← replace with your own backend
+        // If you want to use the public demo, leave as is.
+        // To run locally: http://localhost:3000
+
+        // ─── STATE ──────────────────────────────────────────────
+        let currentFormats = [];
+        let selectedFormatIndex = 0;
+        let isDownloading = false;
+        let downloadInterval = null;
+        let progress = 0;
+        let currentVideoTitle = '';
+        let currentVideoSource = '';
+        let history = JSON.parse(localStorage.getItem('glassdl_history') || '[]');
+
+        // ─── DOM REFS ──────────────────────────────────────────
+        const $ = id => document.getElementById(id);
+        const qualityGrid = $('qualityGrid');
+        const sheetOverlay = $('sheetOverlay');
+        const qualitySheet = $('qualitySheet');
+        const sheetDlBtn = $('sheetDlBtn');
+        const mainDlBtn = $('mainDlBtn');
+        const qualityBadge = $('qualityBadge');
+        const progressWrap = $('progressWrap');
+        const progressRing = $('progressRing');
+        const progressPct = $('progressPct');
+        const progressSpeed = $('progressSpeed');
+        const videoTitle = $('videoTitle');
+        const videoSource = $('videoSource');
+        const searchInput = $('searchInput');
+        const pasteBtn = $('pasteBtn');
+        const toast = $('toast');
+        const historyList = $('historyList');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+
+        // ─── TOAST ──────────────────────────────────────────────
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // ─── FETCH VIDEO INFO ──────────────────────────────────
+        async function fetchVideoInfo(url) {
+            try {
+                const response = await fetch(`${BACKEND_URL}/info?url=${encodeURIComponent(url)}`);
+                if (!response.ok) throw new Error('Failed to fetch video info');
+                const data = await response.json();
+                return data;
+            } catch (err) {
+                console.error(err);
+                showToast('❌ Error: ' + err.message);
+                return null;
+            }
+        }
+
+        // ─── TRIGGER DOWNLOAD ──────────────────────────────────
+        async function downloadVideo(url, formatId) {
+            try {
+                // Start download via backend
+                const response = await fetch(`${BACKEND_URL}/download`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, formatId })
+                });
+                if (!response.ok) throw new Error('Download failed');
+                const data = await response.json();
+                // data contains download URL or file path
+                if (data.downloadUrl) {
+                    // Trigger file download
+                    const a = document.createElement('a');
+                    a.href = data.downloadUrl;
+                    a.download = data.filename || 'video.mp4';
+                    a.click();
+                    showToast('✅ Download started');
+                    // Add to history
+                    addToHistory(currentVideoTitle, currentVideoSource, data.filesize || 'Unknown');
+                } else {
+                    showToast('⚠️ No download URL returned');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('❌ Download error: ' + err.message);
+            }
+        }
+
+        // ─── HISTORY ────────────────────────────────────────────
+        function addToHistory(title, source, size) {
+            history.unshift({ title, source, date: new Date().toLocaleString(), size });
+            if (history.length > 50) history.pop();
+            localStorage.setItem('glassdl_history', JSON.stringify(history));
+            renderHistory();
+        }
+        function renderHistory() {
+            if (!historyList) return;
+            if (history.length === 0) {
+                historyList.innerHTML = `<div style="text-align:center;color:var(--text-tertiary);padding:30px 0;">No downloads yet</div>`;
+                return;
+            }
+            historyList.innerHTML = history.map(h => `
+                <div class="history-item">
+                    <div class="h-icon">▶</div>
+                    <div class="h-info">
+                        <div class="h-title">${h.title}</div>
+                        <div class="h-meta">${h.source} · ${h.date} · ${h.size}</div>
+                    </div>
+                    <div class="h-size">✓</div>
+                </div>
+            `).join('');
+        }
+
+        // ─── QUALITY SHEET ──────────────────────────────────────
+        function openSheet(formats) {
+            currentFormats = formats;
+            selectedFormatIndex = 0;
+            renderQualities();
+            sheetOverlay.classList.add('open');
+            qualitySheet.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSheet() {
+            sheetOverlay.classList.remove('open');
+            qualitySheet.classList.remove('open');
+            document.body.style.overflow = '';
+            if (downloadInterval) clearInterval(downloadInterval);
+            isDownloading = false;
+        }
+        function renderQualities() {
+            qualityGrid.innerHTML = currentFormats.map((f, i) => `
+                <div class="quality-item ${i === selectedFormatIndex ? 'active' : ''}" data-idx="${i}">
+                    <div class="res">${f.resolution || f.quality}</div>
+                    <div class="size">${f.filesize || f.size || '—'}</div>
+                    <div class="check">✓</div>
+                </div>
+            `).join('');
+            qualityGrid.querySelectorAll('.quality-item').forEach(el => {
+                el.addEventListener('click', function() {
+                    selectedFormatIndex = parseInt(this.dataset.idx);
+                    renderQualities();
+                    qualityBadge.textContent = currentFormats[selectedFormatIndex].resolution || currentFormats[selectedFormatIndex].quality;
+                });
+            });
+            sheetDlBtn.onclick = () => {
+                const selected = currentFormats[selectedFormatIndex];
+                if (!selected) return;
+                // Trigger actual download
+                downloadVideo(searchInput.value, selected.format_id || selected.itag);
+                closeSheet();
+            };
+        }
+
+        // ─── HANDLE PASTE / SEARCH ─────────────────────────────
+        async function handlePaste() {
+            const url = searchInput.value.trim();
+            if (!url) {
+                showToast('⚠️ Please paste a valid link');
+                return;
+            }
+            showToast('⏳ Fetching video info...');
+            const data = await fetchVideoInfo(url);
+            if (!data) return;
+            // Update UI
+            videoTitle.textContent = data.title || 'Video';
+            videoSource.textContent = data.source || 'Unknown source';
+            currentVideoTitle = data.title || 'Video';
+            currentVideoSource = data.source || 'Unknown';
+            // Extract formats (assuming data.formats is array with resolution, filesize, itag)
+            let formats = data.formats || [];
+            if (formats.length === 0) {
+                // fallback: create dummy formats
+                formats = [
+                    { resolution: '1080p', filesize: '420 MB', format_id: '137' },
+                    { resolution: '720p', filesize: '210 MB', format_id: '136' },
+                    { resolution: '480p', filesize: '98 MB', format_id: '135' },
+                ];
+            }
+            // Sort by quality (height descending)
+            formats.sort((a, b) => {
+                const ah = parseInt(a.resolution) || 0;
+                const bh = parseInt(b.resolution) || 0;
+                return bh - ah;
+            });
+            // Update badge
+            if (formats.length > 0) {
+                qualityBadge.textContent = formats[0].resolution || formats[0].quality || '1080p';
+            }
+            openSheet(formats);
+        }
+
+        // ─── SIMULATED DOWNLOAD (for demo, if backend not available) ──
+        function startSimulatedDownload() {
+            if (isDownloading) return;
+            isDownloading = true;
+            progress = 0;
+            const downloadBar = $('downloadBar');
+            downloadBar.style.display = 'none';
+            progressWrap.classList.add('active');
+            progressRing.style.strokeDashoffset = 138;
+            progressPct.textContent = '0%';
+            progressSpeed.textContent = '0 MB/s';
+
+            if (downloadInterval) clearInterval(downloadInterval);
+            downloadInterval = setInterval(() => {
+                progress += 1.5 + Math.random() * 1.8;
+                if (progress > 100) progress = 100;
+                const circumference = 138;
+                const offset = circumference - (progress / 100) * circumference;
+                progressRing.style.strokeDashoffset = offset;
+                progressPct.textContent = Math.round(progress) + '%';
+                progressSpeed.textContent = (2.0 + Math.random() * 2.4).toFixed(1) + ' MB/s';
+
+                if (progress >= 100) {
+                    clearInterval(downloadInterval);
+                    downloadInterval = null;
+                    isDownloading = false;
+                    progressSpeed.textContent = '✓ Complete';
+                    showToast('✅ Download complete');
+                    addToHistory(currentVideoTitle || 'Video', currentVideoSource || 'Unknown', '420 MB');
+                    setTimeout(() => {
+                        progressWrap.classList.remove('active');
+                        downloadBar.style.display = 'flex';
+                    }, 800);
+                }
+            }, 120);
+        }
+
+        // ─── TAB SWITCHING ──────────────────────────────────────
+        function switchTab(tabId) {
+            tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(tabId);
+            if (target) target.classList.add('active');
+            const mainGlass = $('mainGlass');
+            if (tabId === 'pageHome') {
+                mainGlass.style.display = 'flex';
+            } else {
+                mainGlass.style.display = 'none';
+            }
+            if (tabId === 'pageHistory') renderHistory();
+            closeSheet();
+        }
+
+        // ─── EVENTS ─────────────────────────────────────────────
+        pasteBtn.addEventListener('click', handlePaste);
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handlePaste();
+        });
+        mainDlBtn.addEventListener('click', () => {
+            if (searchInput.value.trim()) {
+                handlePaste();
+            } else {
+                showToast('⚠️ Paste a link first');
+            }
+        });
+        qualityBadge.addEventListener('click', () => {
+            if (searchInput.value.trim()) handlePaste();
+        });
+        sheetOverlay.addEventListener('click', closeSheet);
+
+        // Toggles in settings
+        document.querySelectorAll('.toggle').forEach(tog => {
+            tog.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('active');
+                const label = this.closest('.settings-item')?.querySelector('.s-label')?.textContent || 'Toggle';
+                showToast(label + ' ' + (this.classList.contains('active') ? 'on' : 'off'));
+            });
+        });
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                switchTab(this.dataset.tab);
+            });
+        });
+        $('settingsBtn').addEventListener('click', () => switchTab('pageSettings'));
+        $('notifBtn').addEventListener('click', () => showToast('🔔 3 new notifications'));
+
+        // ─── INIT ──────────────────────────────────────────────
+        renderHistory();
+        // Pre-fill demo link for quick start
+        searchInput.value = 'https://youtu.be/dQw4w9WgXcQ';
+        showToast('✨ Paste any video link or tap Download');
+
+        // ─── HACK: If backend is down, fallback to simulation ──
+        // We'll try to ping the backend, if fails, use simulated.
+        (async function checkBackend() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/ping`);
+                if (!res.ok) throw new Error();
+                console.log('✅ Backend connected');
+            } catch {
+                console.warn('⚠️ Backend unreachable — using simulated download');
+                // Override download function with simulation
+                window.downloadVideo = (url, formatId) => {
+                    // Simulate
+                    currentVideoTitle = videoTitle.textContent;
+                    currentVideoSource = videoSource.textContent;
+                    startSimulatedDownload();
+                };
+                showToast('⚡ Demo mode (backend offline)');
+            }
+        })();
+    </script>
+</body>
+</html>
